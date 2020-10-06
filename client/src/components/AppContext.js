@@ -23,6 +23,7 @@ export const AppContext = createContext(null);
 
 const AppProvider = ({ children, signInWithGoogle, signOut, user }) => {
   const [appUser, setAppUser] = React.useState({});
+  const [message, setMessage] = useState("");
 
   const handleSignOut = () => {
     signOut();
@@ -31,16 +32,29 @@ const AppProvider = ({ children, signInWithGoogle, signOut, user }) => {
 
   React.useEffect(() => {
     if (user) {
-      setAppUser({
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-      });
+      fetch(`/users`, {
+        method: "post",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+        }),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          setAppUser(json.data);
+          setMessage(json.message);
+        });
     }
   }, [user]);
 
   return (
-    <AppContext.Provider value={{ appUser, signInWithGoogle, handleSignOut }}>
+    <AppContext.Provider
+      value={{ appUser, signInWithGoogle, handleSignOut, message }}
+    >
       {children}
     </AppContext.Provider>
   );
